@@ -1,4 +1,4 @@
-package com.lumine.lumine_translations.controller;
+package com.lumine.lumine_translations.helpers;
 
 public class UserRole
 {

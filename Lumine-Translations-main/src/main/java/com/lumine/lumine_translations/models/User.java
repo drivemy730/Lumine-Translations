@@ -1,11 +1,10 @@
 package com.lumine.lumine_translations.models;
 
 
-import com.lumine.lumine_translations.controller.UserRole;
+import com.lumine.lumine_translations.helpers.UserRole;
 import jakarta.persistence.*;
 
 import java.security.Timestamp;
-import java.text.DateFormat;
 
 
 @Entity
@@ -29,8 +28,10 @@ public class User
     @Column(name = "user_role", nullable = false, unique = true)
     private UserRole userRole;
 
-
+    @Column(name = "user_created_at", nullable = false, updatable = false, insertable = false )
     private Timestamp userCreatedAt;
+
+    @Column(name = "user_last_login" )
     private Timestamp  userLastLogin;
 
 
