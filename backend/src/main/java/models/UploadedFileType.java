@@ -1,84 +1,55 @@
-package models;
+package com.lumine.lumine_translations.models;
 
-import helpers.ClientFileTypeCategory;
+import com.lumine.lumine_translations.helpers.ClientFileTypeCategory;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
-import java.util.HashSet;
-import java.util.Set;
 
 import java.math.BigDecimal;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
-@Table(name = "document_types")  // Plural table name convention
+@Table(name = "document_types")
 public class UploadedFileType {
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "file_type_id")
-    private Integer id;  // Simplified field name
+    private Integer id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "name", nullable = false, unique = true, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private ClientFileTypeCategory name;
 
     @Column(name = "base_price_multiplier", nullable = false, precision = 3, scale = 2)
-    private BigDecimal basePriceMultiplier = BigDecimal.ONE;  // Default 1.00
+    private BigDecimal basePriceMultiplier = BigDecimal.ONE;
 
-    @Column(name = "difficulty_level", nullable = false)
-    private Integer difficultyLevel = 1;  // 1-5 scale
+    @Column(nullable = false)
+    @Min(1) @Max(5)  // Validation for 1-5 scale
+    private Integer difficultyLevel = 1;
 
-
-    @OneToMany(mappedBy = "uploadedFileTypeId", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Set<ClientUploadedFile> uploadedFiles = new HashSet<>();
-
+    @OneToMany(mappedBy = "fileType")  // Fixed mapping to match ClientUploadedFile
+    private Set<ClientUploadedFile> files = new HashSet<>();  // Renamed from clientUploadedFiles
 
     // ------------------- Constructors -------------------
-    public UploadedFileType() {
-    }
+    public UploadedFileType() {}
 
-    public UploadedFileType(ClientFileTypeCategory name, BigDecimal basePriceMultiplier, Integer difficultyLevel) {
-        this.name = name;
-        this.basePriceMultiplier = basePriceMultiplier;
-        this.difficultyLevel = difficultyLevel;
-    }
-
-    // ------------------- Getters and Setters -------------------
-    public Integer getId() {
-        return id;
-    }
-
-    public ClientFileTypeCategory getName() {
-        return name;
-    }
-
-    public void setName(ClientFileTypeCategory name) {
+    public UploadedFileType(ClientFileTypeCategory name) {
         this.name = name;
     }
 
-    public BigDecimal getBasePriceMultiplier() {
-        return basePriceMultiplier;
-    }
+    // ------------------- Accessors -------------------
+    public Integer getId() { return id; }
+    public ClientFileTypeCategory getName() { return name; }
+    public BigDecimal getBasePriceMultiplier() { return basePriceMultiplier; }
+    public Integer getDifficultyLevel() { return difficultyLevel; }
+    public Set<ClientUploadedFile> getFiles() { return Collections.unmodifiableSet(files); }
 
-    public void setBasePriceMultiplier(BigDecimal basePriceMultiplier) {
-        this.basePriceMultiplier = basePriceMultiplier;
+    public void setName(ClientFileTypeCategory name) { this.name = name; }
+    public void setBasePriceMultiplier(BigDecimal multiplier) {
+        this.basePriceMultiplier = multiplier != null ? multiplier : BigDecimal.ONE;
     }
-
-    public Integer getDifficultyLevel() {
-        return difficultyLevel;
-    }
-
-    public void setDifficultyLevel(Integer difficultyLevel) {
-        this.difficultyLevel = difficultyLevel;
-    }
-
-    public Set<ClientUploadedFile> getUploadedFiles() {
-        return uploadedFiles;
-    }
-
-    public void setUploadedFiles(Set<ClientUploadedFile> uploadedFiles) {
-        this.uploadedFiles = uploadedFiles;
+    public void setDifficultyLevel(Integer level) {
+        this.difficultyLevel = (level != null) ? Math.min(5, Math.max(1, level)) : 1;
     }
 
 
@@ -87,7 +58,7 @@ public class UploadedFileType {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof UploadedFileType that)) return false;
-        return Objects.equals(name, that.name);
+        return name == that.name;
     }
 
     @Override
@@ -98,9 +69,9 @@ public class UploadedFileType {
     // ------------------- toString() -------------------
     @Override
     public String toString() {
-        return "DocumentType{" +
-                "id=" + id +
-                ", name=" + name +
+        return "UploadedFileType{" +
+                "name=" + name +
+                ", difficulty=" + difficultyLevel +
                 '}';
     }
 }
