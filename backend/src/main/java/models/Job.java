@@ -1,89 +1,90 @@
-package models;
+package com.lumine.lumine_translations.models;
 
-import helpers.JobStatus;
-import java.time.OffsetDateTime;
+import com.lumine.lumine_translations.helpers.JobStatus;
 import jakarta.persistence.*;
-
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Entity
-@Table(name = "job")
-public class Job
-{
+@Table(name = "jobs")
+public class Job {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "job_id")
-    private Integer jobId;
+    private Integer id;
 
-    @Column(name = "quote_id", nullable = false, unique = true)
-    private Integer quoteId; // FK to Quote (quoteId)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quote_id", nullable = false, unique = true)
+    private Quote quote;
 
-    @Column(name = "client_id", nullable = false)
-    private Integer clientId; // FK to User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)
+    private User client;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 20)
+    @Column(nullable = false, length = 20)
     private JobStatus status;
 
     @Column(name = "final_s3_key", length = 512)
-    private String s3Key;
+    private String finalS3Key;
+
+    @CreationTimestamp
+    @Column(name = "started_at", nullable = false, updatable = false)
+    private OffsetDateTime startedAt;
 
     @Column(name = "completed_at")
     private OffsetDateTime completedAt;
 
-    // constructors
+    // ------------------- Constructors -------------------
+    public Job() {}
 
-    public Job() {
+    public Job(Quote quote, User client) {
+        this.quote = quote;
+        this.client = client;
     }
 
-    public Job(Integer jobId, Integer clientId, Integer quoteId, JobStatus status, String s3Key) {
-        this.jobId = jobId;
-        this.clientId = clientId;
-        this.quoteId = quoteId;
-        this.status = status;
-        this.s3Key = s3Key;
+    // ------------------- Accessors -------------------
+    public Integer getId() { return id; }
+    public Quote getQuote() { return quote; }
+    public User getClient() { return client; }
+    public JobStatus getStatus() { return status; }
+    public String getFinalS3Key() { return finalS3Key; }
+    public OffsetDateTime getStartedAt() { return startedAt; }
+    public OffsetDateTime getCompletedAt() { return completedAt; }
+
+    public void setQuote(Quote quote) { this.quote = quote; }
+    public void setClient(User client) { this.client = client; }
+    public void setStatus(JobStatus status) { this.status = status; }
+    public void setFinalS3Key(String finalS3Key) { this.finalS3Key = finalS3Key; }
+    public void setCompletedAt(OffsetDateTime completedAt) { this.completedAt = completedAt; }
+
+    // ------------------- Business Logic -------------------
+    public boolean isCompleted() {
+        return status == JobStatus.COMPLETED;
     }
 
-    // getters and setters
-
-
-    public Integer getJobId() {
-        return jobId;
+    // ------------------- equals() / hashCode() -------------------
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Job job)) return false;
+        return Objects.equals(id, job.id);
     }
 
-    public void setJobId(Integer jobId) {
-        this.jobId = jobId;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
-    public Integer getQuoteId() {
-        return quoteId;
-    }
-
-    public void setQuoteId(Integer quoteId) {
-        this.quoteId = quoteId;
-    }
-
-    public Integer getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(Integer clientId) {
-        this.clientId = clientId;
-    }
-
-    public JobStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(JobStatus status) {
-        this.status = status;
-    }
-
-    public String getS3Key() {
-        return s3Key;
-    }
-
-    public void setS3Key(String s3Key) {
-        this.s3Key = s3Key;
+    // ------------------- toString() -------------------
+    @Override
+    public String toString() {
+        return "Job{" +
+                "id=" + id +
+                ", status=" + status +
+                ", startedAt=" + startedAt +
+                '}';
     }
 }
