@@ -1,93 +1,95 @@
-package models;
+package com.lumine.lumine_translations.models;
 
-import helpers.QuoteStatus;
+import com.lumine.lumine_translations.helpers.QuoteStatus;
 import jakarta.persistence.*;
-
-import java.security.Timestamp;
+import org.hibernate.annotations.CreationTimestamp;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
-@Table(name = "quote")
-
-public class Quote
-{
+@Table(name = "quotes")
+public class Quote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "quote_id")
-    private Integer quoteId;
+    private Long id;
 
-    @Column(name = "client_id")
-    private Integer clientId;  // FK to user (userId)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_id", nullable = false)  // Changed from document_id
+    private ClientUploadedFile file;  // Changed from document
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)  // Renamed from translator_id (business logic fix)
+    private User client;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Column(nullable = false)
+    private int estimatedHours;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "quote_status_enum", nullable = false)
+    @Column(nullable = false, length = 20)
     private QuoteStatus status;
 
-    @Column(name = "quote_created_at", nullable = false, updatable = false, insertable = false )
-    private Timestamp createdAt;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(name = "quote_last_login" )
-    private Timestamp expiresAt;
+    @Column(name = "expires_at", nullable = false)
+    private LocalDateTime expiresAt;
 
+    // ------------------- Constructors -------------------
+    public Quote() {}
 
-
-    //constructors
-
-    public Quote()
-    {
-    }
-
-    public Quote(Integer quoteId, Integer clientId, QuoteStatus status, Timestamp createdAt, Timestamp expiresAt) {
-        this.quoteId = quoteId;
-        this.clientId = clientId;
+    public Quote(ClientUploadedFile file, User client, BigDecimal price,
+                 int estimatedHours, QuoteStatus status, LocalDateTime expiresAt) {
+        this.file = file;
+        this.client = client;
+        this.price = price;
+        this.estimatedHours = estimatedHours;
         this.status = status;
-        this.createdAt = createdAt;
         this.expiresAt = expiresAt;
     }
 
+    // ------------------- Getters and Setters -------------------
+    public Long getId() { return id; }
+    public ClientUploadedFile getFile() { return file; }  // Renamed
+    public User getClient() { return client; }
+    public BigDecimal getPrice() { return price; }
+    public int getEstimatedHours() { return estimatedHours; }
+    public QuoteStatus getStatus() { return status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getExpiresAt() { return expiresAt; }
 
+    public void setFile(ClientUploadedFile file) { this.file = file; }  // Renamed
+    public void setClient(User client) { this.client = client; }
+    public void setPrice(BigDecimal price) { this.price = price; }
+    public void setEstimatedHours(int estimatedHours) { this.estimatedHours = estimatedHours; }
+    public void setStatus(QuoteStatus status) { this.status = status; }
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
 
-
-    //getters and setters
-
-
-    public Integer getQuoteId() {
-        return quoteId;
+    // ------------------- equals() / hashCode() -------------------
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Quote quote)) return false;
+        return Objects.equals(id, quote.id);
     }
 
-    public void setQuoteId(Integer quoteId) {
-        this.quoteId = quoteId;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
-    public Integer getClientId() {
-        return clientId;
-    }
-
-    public void setClientId(Integer clientId) {
-        this.clientId = clientId;
-    }
-
-    public QuoteStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(QuoteStatus status) {
-        this.status = status;
-    }
-
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Timestamp getExpiresAt() {
-        return expiresAt;
-    }
-
-    public void setExpiresAt(Timestamp expiresAt) {
-        this.expiresAt = expiresAt;
+    // ------------------- toString() -------------------
+    @Override
+    public String toString() {
+        return "Quote{" +
+                "id=" + id +
+                ", price=" + price +
+                ", status=" + status +
+                '}';
     }
 }
