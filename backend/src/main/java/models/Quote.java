@@ -1,6 +1,6 @@
-package com.lumine.lumine_translations.models;
+package models;
 
-import com.lumine.lumine_translations.helpers.QuoteStatus;
+import helpers.QuoteStatus;
 import jakarta.persistence.*;
 
 import java.security.Timestamp;

@@ -1,9 +1,7 @@
-package com.lumine.lumine_translations.helpers;
+package helpers;
 
-public class DocumentType
+public enum ClientFileTypeCategory
 {
-    public enum ClientDocumentTypeName
-    {
         LEGAL_CONTRACT,
         COURT_DOCUMENT,
         IMMIGRATION_DOCUMENT,
@@ -42,6 +40,7 @@ public class DocumentType
 
         CERTIFIED_TRANSLATION,
         NOTARIZED_TRANSLATION
-    }
 
-}
+
+    }
+    
