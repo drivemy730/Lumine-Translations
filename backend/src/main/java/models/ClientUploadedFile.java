@@ -1,17 +1,14 @@
-package models;
+package com.lumine.lumine_translations.models;
 
-import helpers.ContactMethod;
+import com.lumine.lumine_translations.helpers.ContactMethod;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
-@Table(name = "client_documents")
+@Table(name = "client_files")  // Changed from "client_documents"
 public class ClientUploadedFile {
 
     @Id
@@ -22,10 +19,6 @@ public class ClientUploadedFile {
     @JoinColumn(name = "client_id", nullable = false)
     private User client;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "contact_method")
-    private ContactMethod contactMethod;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_language_id", nullable = false)
     private Language sourceLanguage;
@@ -35,138 +28,88 @@ public class ClientUploadedFile {
     private Language targetLanguage;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_type_id", nullable = false)
-    private UploadedFileType uploadedFileTypeId;
+    @JoinColumn(name = "file_type_id", nullable = false)  // Changed from document_type_id
+    private UploadedFileType fileType;  // Renamed from documentType
 
     @Column(name = "s3_key", nullable = false, length = 512)
-    private String s3Key; // AWS S3 object path
+    private String s3Key;
 
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "file_type", nullable = false, length = 20)
-    private String fileType; // "PDF", "DOCX", etc.
+    @Column(name = "file_extension", nullable = false, length = 20)  // Changed from file_type
+    private String fileExtension;  // Renamed from fileType
 
     @Column(name = "word_count", nullable = false)
     private int wordCount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "contact_method")
+    private ContactMethod contactMethod;
 
     @CreationTimestamp
     @Column(name = "uploaded_at", nullable = false, updatable = false)
     private LocalDateTime uploadedAt;
 
     @OneToMany(
-            mappedBy = "document",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            orphanRemoval = false,
+            mappedBy = "file",  // Changed from "document"
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
             fetch = FetchType.LAZY
     )
     private Set<Quote> quotes = new HashSet<>();
 
     // ------------------- Constructors -------------------
-    public ClientUploadedFile() {
-    }
+    public ClientUploadedFile() {}
 
-    public ClientUploadedFile(User client, ContactMethod contactMethod, Language sourceLanguage, Language targetLanguage,
-                              UploadedFileType uploadedFileTypeId, String s3Key, String fileName,
-                              String fileType, int wordCount) {
+    public ClientUploadedFile(User client, Language sourceLanguage, Language targetLanguage,
+                              UploadedFileType fileType, String s3Key, String fileName,
+                              String fileExtension, int wordCount) {
         this.client = client;
-        this.contactMethod = contactMethod;
         this.sourceLanguage = sourceLanguage;
         this.targetLanguage = targetLanguage;
-        this.uploadedFileTypeId = uploadedFileTypeId;
+        this.fileType = fileType;
         this.s3Key = s3Key;
         this.fileName = fileName;
-        this.fileType = fileType;
+        this.fileExtension = fileExtension;
         this.wordCount = wordCount;
     }
 
-    // ------------------- Getters and Setters -------------------
-    public UUID getId() {
-        return id;
+    // ------------------- Accessors -------------------
+    // Getters
+    public UUID getId() { return id; }
+    public User getClient() { return client; }
+    public Language getSourceLanguage() { return sourceLanguage; }
+    public Language getTargetLanguage() { return targetLanguage; }
+    public UploadedFileType getFileType() { return fileType; }
+    public String getS3Key() { return s3Key; }
+    public String getFileName() { return fileName; }
+    public String getFileExtension() { return fileExtension; }
+    public int getWordCount() { return wordCount; }
+    public ContactMethod getContactMethod() { return contactMethod; }
+    public LocalDateTime getUploadedAt() { return uploadedAt; }
+    public Set<Quote> getQuotes() { return quotes; }
+
+    // Setters
+    public void setClient(User client) { this.client = client; }
+    public void setSourceLanguage(Language sourceLanguage) { this.sourceLanguage = sourceLanguage; }
+    public void setTargetLanguage(Language targetLanguage) { this.targetLanguage = targetLanguage; }
+    public void setFileType(UploadedFileType fileType) { this.fileType = fileType; }
+    public void setS3Key(String s3Key) { this.s3Key = s3Key; }
+    public void setFileName(String fileName) { this.fileName = fileName; }
+    public void setFileExtension(String fileExtension) { this.fileExtension = fileExtension; }
+    public void setWordCount(int wordCount) { this.wordCount = wordCount; }
+    public void setContactMethod(ContactMethod contactMethod) { this.contactMethod = contactMethod; }
+
+    // ------------------- Relationship Helpers -------------------
+    public void addQuote(Quote quote) {
+        quotes.add(quote);
+        quote.setFile(this);  // Changed from setDocument
     }
 
-    public User getClient() {
-        return client;
-    }
-
-    public void setClient(User client) {
-        this.client = client;
-    }
-
-    public ContactMethod getContactMethod() {
-        return contactMethod;
-    }
-
-    public void setContactMethod(ContactMethod contactMethod) {
-        this.contactMethod = contactMethod;
-    }
-
-    public Language getSourceLanguage() {
-        return sourceLanguage;
-    }
-
-    public void setSourceLanguage(Language sourceLanguage) {
-        this.sourceLanguage = sourceLanguage;
-    }
-
-    public Language getTargetLanguage() {
-        return targetLanguage;
-    }
-
-    public void setTargetLanguage(Language targetLanguage) {
-        this.targetLanguage = targetLanguage;
-    }
-
-    public UploadedFileType getUploadedFileTypeId() {
-        return uploadedFileTypeId;
-    }
-
-    public void setUploadedFileTypeId(UploadedFileType uploadedFileTypeId) {
-        this.uploadedFileTypeId = uploadedFileTypeId;
-    }
-
-    public String getS3Key() {
-        return s3Key;
-    }
-
-    public void setS3Key(String s3Key) {
-        this.s3Key = s3Key;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public String getFileType() {
-        return fileType;
-    }
-
-    public void setFileType(String fileType) {
-        this.fileType = fileType;
-    }
-
-    public int getWordCount() {
-        return wordCount;
-    }
-
-    public void setWordCount(int wordCount) {
-        this.wordCount = wordCount;
-    }
-
-    public LocalDateTime getUploadedAt() {
-        return uploadedAt;
-    }
-
-    public Set<Quote> getQuotes() {
-        return quotes;
-    }
-
-    public void setQuotes(Set<Quote> quotes) {
-        this.quotes = quotes;
+    public void removeQuote(Quote quote) {
+        quotes.remove(quote);
+        quote.setFile(null);  // Changed from setDocument
     }
 
     // ------------------- equals() / hashCode() -------------------
@@ -185,12 +128,10 @@ public class ClientUploadedFile {
     // ------------------- toString() -------------------
     @Override
     public String toString() {
-        return "ClientDocument{" +
+        return "ClientUploadedFile{" +
                 "id=" + id +
                 ", fileName='" + fileName + '\'' +
-                ", fileType='" + fileType + '\'' +
-                ", wordCount=" + wordCount +
-                ", uploadedAt=" + uploadedAt +
-                '}'; // Excludes relationships for simplicity
+                ", fileExtension='" + fileExtension + '\'' +
+                '}';
     }
 }
