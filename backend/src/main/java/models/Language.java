@@ -1,13 +1,10 @@
-package models;
+package com.lumine.lumine_translations.models;
 
-import helpers.LanguageFamily;
-import helpers.LanguageIsoCode;
-import helpers.LanguageName;
+import com.lumine.lumine_translations.helpers.LanguageFamily;
+import com.lumine.lumine_translations.helpers.LanguageIsoCode;
+import com.lumine.lumine_translations.helpers.LanguageName;
 import jakarta.persistence.*;
-
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Table(name = "languages")
@@ -15,7 +12,6 @@ public class Language {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "language_id")
     private Integer id;
 
     @Enumerated(EnumType.STRING)
@@ -23,112 +19,69 @@ public class Language {
     private LanguageIsoCode isoCode;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "name", nullable = false, length = 50)
+    @Column(nullable = false, length = 50)
     private LanguageName name;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "family", length = 30)
+    @Column(length = 30)
     private LanguageFamily family;
 
     @Column(name = "is_rare", nullable = false)
     private boolean isRare = false;
 
-    @OneToMany(mappedBy = "sourceLanguage", fetch = FetchType.LAZY)
-    private Set<ClientUploadedFile> documentsAsSource = new HashSet<>();
+    // Relationships
+    @OneToMany(mappedBy = "sourceLanguage")
+    private Set<ClientUploadedFile> sourceFiles = new HashSet<>();  // Renamed from documentsAsSource
 
-    @OneToMany(mappedBy = "targetLanguage", fetch = FetchType.LAZY)
-    private Set<ClientUploadedFile> documentsAsTarget = new HashSet<>();
+    @OneToMany(mappedBy = "targetLanguage")
+    private Set<ClientUploadedFile> targetFiles = new HashSet<>();  // Renamed from documentsAsTarget
 
-    public Language() {
-    }
+    // ------------------- Constructors -------------------
+    public Language() {}
 
-    public Language(Integer id, LanguageIsoCode isoCode, LanguageName name,
-                    LanguageFamily family, boolean isRare) {
-        this.id = id;
+    public Language(LanguageIsoCode isoCode, LanguageName name) {
         this.isoCode = isoCode;
         this.name = name;
-        this.family = family;
-        this.isRare = isRare;
     }
 
-    public Integer getId() {
-        return id;
+    // ------------------- Accessors -------------------
+    public Integer getId() { return id; }
+    public LanguageIsoCode getIsoCode() { return isoCode; }
+    public LanguageName getName() { return name; }
+    public LanguageFamily getFamily() { return family; }
+    public boolean isRare() { return isRare; }
+    public Set<ClientUploadedFile> getSourceFiles() { return Collections.unmodifiableSet(sourceFiles); }
+    public Set<ClientUploadedFile> getTargetFiles() { return Collections.unmodifiableSet(targetFiles); }
+
+    public void setIsoCode(LanguageIsoCode isoCode) { this.isoCode = isoCode; }
+    public void setName(LanguageName name) { this.name = name; }
+    public void setFamily(LanguageFamily family) { this.family = family; }
+    public void setRare(boolean isRare) { this.isRare = isRare; }
+
+    // ------------------- Business Methods -------------------
+    public boolean isCommonLanguage() {
+        return !isRare;
     }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public LanguageIsoCode getIsoCode() {
-        return isoCode;
-    }
-
-    public void setIsoCode(LanguageIsoCode isoCode) {
-        this.isoCode = isoCode;
-    }
-
-    public LanguageName getName() {
-        return name;
-    }
-
-    public void setName(LanguageName name) {
-        this.name = name;
-    }
-
-    public LanguageFamily getFamily() {
-        return family;
-    }
-
-    public void setFamily(LanguageFamily family) {
-        this.family = family;
-    }
-
-    public boolean isRare() {
-        return isRare;
-    }
-
-    public void setRare(boolean rare) {
-        isRare = rare;
-    }
-
-    public Set<ClientUploadedFile> getDocumentsAsSource() {
-        return documentsAsSource;
-    }
-
-    public void setDocumentsAsSource(Set<ClientUploadedFile> documentsAsSource) {
-        this.documentsAsSource = documentsAsSource;
-    }
-
-    public Set<ClientUploadedFile> getDocumentsAsTarget() {
-        return documentsAsTarget;
-    }
-
-    public void setDocumentsAsTarget(Set<ClientUploadedFile> documentsAsTarget) {
-        this.documentsAsTarget = documentsAsTarget;
-    }
-
+    // ------------------- equals() / hashCode() -------------------
     @Override
-    public boolean equals(Object o)
-    {
+    public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Language language)) return false;
-        return Objects.equals(isoCode, language.isoCode);
+        return isoCode == language.isoCode;
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hash(isoCode);
     }
 
+    // ------------------- toString() -------------------
     @Override
-    public String toString()
-    {
+    public String toString() {
         return "Language{" +
-                "id=" + id +
-                ", isoCode=" + isoCode +
+                "isoCode=" + isoCode +
                 ", name=" + name +
-                ", isRare=" + isRare +
                 '}';
     }
 }
