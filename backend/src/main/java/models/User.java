@@ -1,27 +1,19 @@
-package models;
+package com.lumine.lumine_translations.models;
 
-import helpers.UserRole;
+import com.lumine.lumine_translations.helpers.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.NaturalId;
-import java.util.Collections;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Entity
-@Table(name = "users", indexes =
-        {
+@Table(name = "users", indexes = {
         @Index(name = "idx_users_email", columnList = "email"),
         @Index(name = "idx_users_role", columnList = "role")
-        })
-
-public class User
-{
+})
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,169 +21,92 @@ public class User
 
     @NaturalId
     @Email
-    @NotNull
-    @Size(min = 5, max = 255)
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @NotNull
-    @Size(min = 60, max = 60) // BCrypt hash length
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", length = 60) // BCrypt hash (nullable for guests)
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @NotNull
-    @Column(name = "role", nullable = false, length = 20)
+    @Column(nullable = false, length = 20)
     private UserRole role;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
 
-    // ---------------- Relationships ----------------
-
-    @OneToMany
-            (
+    // ------------------- Relationships -------------------
+    @OneToMany(
             mappedBy = "client",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE},
-            orphanRemoval = true,
-            fetch = FetchType.LAZY
-            )
-
-    private Set<ClientUploadedFile> clientUploadedFiles = new HashSet<>();
-
-    @OneToMany
-            (
-            mappedBy = "client",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            fetch = FetchType.LAZY
-            )
-    private Set<Quote> clientQuotes = new HashSet<>();
-
-    @OneToMany
-            (
-            mappedBy = "translator",
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            fetch = FetchType.LAZY
-            )
-    private Set<Quote> translatorQuotes = new HashSet<>();
-
-    @OneToMany
-            (
-            mappedBy = "sender",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
             fetch = FetchType.LAZY
-            )
+    )
+    private Set<ClientUploadedFile> files = new HashSet<>();
+
+    @OneToMany(
+            mappedBy = "client",
+            fetch = FetchType.LAZY
+    )
+    private Set<Quote> quotes = new HashSet<>();
+
+    @OneToMany(
+            mappedBy = "sender",
+            fetch = FetchType.LAZY
+    )
     private Set<Message> sentMessages = new HashSet<>();
 
-    @OneToMany
-            (
+    @OneToMany(
             mappedBy = "receiver",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
             fetch = FetchType.LAZY
-            )
+    )
     private Set<Message> receivedMessages = new HashSet<>();
 
-    // ---------------- Constructors ----------------
+    // ------------------- Constructors -------------------
+    protected User() {} // JPA requires protected constructor
 
-    public User()
-    {
-    }
-
-    public User(String email, String passwordHash, UserRole role)
-    {
+    public User(String email, UserRole role) {
         this.email = email;
-        this.passwordHash = passwordHash != null ? passwordHash : "";
         this.role = role;
     }
 
-    // ---------------- Getters and Setters ----------------
+    // ------------------- Accessors -------------------
+    public Long getId() { return id; }
+    public String getEmail() { return email; }
+    public String getPasswordHash() { return passwordHash; }
+    public UserRole getRole() { return role; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getLastLogin() { return lastLogin; }
+    public Set<ClientUploadedFile> getFiles() { return Collections.unmodifiableSet(files); }
+    public Set<Quote> getQuotes() { return Collections.unmodifiableSet(quotes); }
+    public Set<Message> getSentMessages() { return Collections.unmodifiableSet(sentMessages); }
+    public Set<Message> getReceivedMessages() { return Collections.unmodifiableSet(receivedMessages); }
 
-    public Long getId()
-    {
-        return id;
+    public void setEmail(String email) { this.email = email; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public void setRole(UserRole role) { this.role = role; }
+    public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+
+    // ------------------- Relationship Helpers -------------------
+    public void addFile(ClientUploadedFile file) {
+        files.add(file);
+        file.setClient(this);
     }
 
-    public void setId(Long id)
-    {
-        this.id = id;
+    public void addQuote(Quote quote) {
+        quotes.add(quote);
+        quote.setClient(this);
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email)
-    {
-        this.email = email;
-    }
-
-    public String getPasswordHash()
-    {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash != null ? passwordHash : "";
-    }
-
-    public UserRole getRole()
-    {
-        return role;
-    }
-
-    public void setRole(UserRole role)
-    {
-        this.role = role;
-    }
-
-    public LocalDateTime getCreatedAt()
-    {
-        return createdAt;
-    }
-
-    public LocalDateTime getLastLogin()
-    {
-        return lastLogin;
-    }
-
-    public void setLastLogin(LocalDateTime lastLogin)
-    {
-        this.lastLogin = lastLogin;
-    }
-
-    // ---------------- Relationship Accessors ----------------
-
-    public Set<ClientUploadedFile> getClientDocuments()
-    {
-        return Collections.unmodifiableSet(clientUploadedFiles);
-    }
-
-    public void addClientDocument(ClientUploadedFile document)
-    {
-        clientUploadedFiles.add(document);
-        document.setClient(this);
-    }
-
-    public void removeClientDocument(ClientUploadedFile document) {
-        clientUploadedFiles.remove(document);
-        document.setClient(null);
-    }
-
-    // (Similar add/remove methods for other relationships)
-
-    // ---------------- equals, hashCode, toString ----------------
-
+    // ------------------- equals() / hashCode() -------------------
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof User user)) return false;
-        return Objects.equals(email, user.email); // Natural ID comparison
+        return Objects.equals(email, user.email);
     }
 
     @Override
@@ -199,13 +114,13 @@ public class User
         return Objects.hash(email);
     }
 
+    // ------------------- toString() -------------------
     @Override
     public String toString() {
         return "User{" +
                 "id=" + id +
                 ", email='" + email + '\'' +
                 ", role=" + role +
-                ", createdAt=" + createdAt +
-                '}'; // Excluded passwordHash and lastLogin
+                '}';
     }
 }
