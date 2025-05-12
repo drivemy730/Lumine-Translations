@@ -1,8 +1,9 @@
-package models;
+package com.lumine.lumine_translations.models;
 
 import jakarta.persistence.*;
-
-import java.time.OffsetDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "messages")
@@ -10,26 +11,31 @@ public class Message {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "message_id")
-    private Integer messageId;
+    private Long id;
 
-    @Column(name = "sender_id", nullable = false)
-    private User sender; // fk to User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
 
-    @Column(name = "receiver_id", nullable = false)
-    private User receiver; // fk to User
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private User receiver;
 
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_id")  // Changed from document_id to match ClientUploadedFile
+    private ClientUploadedFile file;  // Renamed from document
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "sent_at", nullable = false)
-    private OffsetDateTime sentAt = OffsetDateTime.now();
+    @CreationTimestamp
+    @Column(name = "sent_at", nullable = false, updatable = false)
+    private LocalDateTime sentAt;
 
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
-    // Constructors
-
+    // ------------------- Constructors -------------------
     public Message() {}
 
     public Message(User sender, User receiver, String content) {
@@ -38,53 +44,43 @@ public class Message {
         this.content = content;
     }
 
-    // Getters and setters
+    // ------------------- Accessors -------------------
+    public Long getId() { return id; }
+    public User getSender() { return sender; }
+    public User getReceiver() { return receiver; }
+    public ClientUploadedFile getFile() { return file; }  // Renamed
+    public String getContent() { return content; }
+    public LocalDateTime getSentAt() { return sentAt; }
+    public boolean isRead() { return isRead; }
 
-    public Integer getMessageId() {
-        return messageId;
+    public void setSender(User sender) { this.sender = sender; }
+    public void setReceiver(User receiver) { this.receiver = receiver; }
+    public void setFile(ClientUploadedFile file) { this.file = file; }  // Renamed
+    public void setContent(String content) { this.content = content; }
+    public void setRead(boolean isRead) { this.isRead = isRead; }
+
+
+    // ------------------- equals() / hashCode() -------------------
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Message message)) return false;
+        return Objects.equals(id, message.id);
     }
 
-    public void setMessageId(Integer messageId) {
-        this.messageId = messageId;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
-    public User getSender() {
-        return sender;
-    }
-
-    public void setSender(User sender) {
-        this.sender = sender;
-    }
-
-    public User getReceiver() {
-        return receiver;
-    }
-
-    public void setReceiver(User receiver) {
-        this.receiver = receiver;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public OffsetDateTime getSentAt() {
-        return sentAt;
-    }
-
-    public void setSentAt(OffsetDateTime sentAt) {
-        this.sentAt = sentAt;
-    }
-
-    public boolean isRead() {
-        return isRead;
-    }
-
-    public void setRead(boolean read) {
-        isRead = read;
+    // ------------------- toString() -------------------
+    @Override
+    public String toString() {
+        return "Message{" +
+                "id=" + id +
+                ", sender=" + (sender != null ? sender.getId() : "system") +
+                ", receiver=" + receiver.getId() +
+                ", sentAt=" + sentAt +
+                '}';
     }
 }
